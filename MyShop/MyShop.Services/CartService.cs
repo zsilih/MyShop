@@ -1,6 +1,8 @@
 ﻿using MyShop.Core.Contracts;
 using MyShop.Core.Models;
+using MyShop.Core.ViewModels;
 using System;
+using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,7 +11,7 @@ using System.Web;
 
 namespace MyShop.Services
 {
-    public class CartService
+    public class CartService : ICartService
     {
         IRepository<Product> productContext;
         IRepository<Cart> cartContext;
@@ -100,5 +102,58 @@ namespace MyShop.Services
                 cartContext.Commit();
             }
         }
+
+        public List<CartItemViewModel> GetCartItems(HttpContextBase httpContext)
+        {
+            Cart cart = GetCart(httpContext, false);
+            if(cart != null)
+            {
+                var results = (from c in cart.CartItems
+                              join p in productContext.Collection() on c.ProductId equals p.Id
+                              select new CartItemViewModel()
+                              {
+                                  Id = c.Id,
+                                  Quantity = c.Quantity,
+                                  ProductName = p.Name,
+                                  Image = p.Image,
+                                  Price = p.Price
+                              }
+                              ).ToList();
+
+
+                return results;
+            }
+            else
+            {
+                return new List<CartItemViewModel>();
+            }
+        }
+
+        public CartSummaryViewModel GetCartSummary(HttpContextBase httpContext)
+        {
+            Cart cart = GetCart(httpContext, false);
+            CartSummaryViewModel model = new CartSummaryViewModel(0, 0);
+
+            if (cart!=null)
+            {
+                int? cartCount = (from item in cart.CartItems
+                                  select item.Quantity).Sum();
+
+                decimal? cartTotal = (from item in cart.CartItems
+                                      join p in productContext.Collection() on item.ProductId equals p.Id
+                                      select item.Quantity * p.Price).Sum();
+
+                model.CartCount = cartCount ?? 0;
+                model.CartTotal = cartTotal ?? decimal.Zero;
+
+                return model;
+            }
+            else
+            {
+                return model;
+            }
+        }
+
+
     }
 }
