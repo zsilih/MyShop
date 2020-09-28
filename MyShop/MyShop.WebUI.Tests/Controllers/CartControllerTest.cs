@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Security.Principal;
 using System.Web.Mvc;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MyShop.Core.Contracts;
@@ -21,13 +22,14 @@ namespace MyShop.WebUI.Tests.Controllers
             IRepository<Cart> carts = new MockContext<Cart>();
             IRepository<Product> products = new MockContext<Product>();
             IRepository<Order> orders = new MockContext<Order>();
+            IRepository<Customer> customers = new MockContext<Customer>();
 
             var httpContext = new MockHttpContext();
 
             ICartService cartService = new CartService(products, carts);
             IOrderService orderService = new OrderService(orders);
 
-            var controller = new CartController(cartService, orderService);
+            var controller = new CartController(cartService, orderService, customers);
             controller.ControllerContext = new System.Web.Mvc.ControllerContext(httpContext, new System.Web.Routing.RouteData(), controller);
             
             
@@ -51,6 +53,7 @@ namespace MyShop.WebUI.Tests.Controllers
             IRepository<Cart> carts = new MockContext<Cart>();
             IRepository<Product> products = new MockContext<Product>();
             IRepository<Order> orders = new MockContext<Order>();
+            IRepository<Customer> customers = new MockContext<Customer>();
 
             products.Insert(new Product() { Id = "1", Price = 10.00m });
             products.Insert(new Product() { Id = "2", Price = 5.00m });
@@ -63,7 +66,7 @@ namespace MyShop.WebUI.Tests.Controllers
             ICartService cartService = new CartService(products, carts);
             IOrderService orderService = new OrderService(orders);
 
-            var controller = new CartController(cartService, orderService);
+            var controller = new CartController(cartService, orderService, customers);
 
             var httpContext = new MockHttpContext();
 
@@ -82,6 +85,7 @@ namespace MyShop.WebUI.Tests.Controllers
         [TestMethod]
         public void CanCheckoutAndCreateOrder()
         {
+            IRepository<Customer> customers = new MockContext<Customer>();
             IRepository<Product> products = new MockContext<Product>();
             products.Insert(new Product() { Id = "1", Price = 10.00m });
             products.Insert(new Product() { Id = "2", Price = 5.00m });
@@ -98,8 +102,14 @@ namespace MyShop.WebUI.Tests.Controllers
             IRepository<Order> orders = new MockContext<Order>();
             IOrderService orderService = new OrderService(orders);
 
-            var controller = new CartController(cartService, orderService);
+            customers.Insert(new Customer() { Id = "1", Email = "zaksilih@gmail.com", ZipCode = "1000" });
+
+            IPrincipal FakeUser = new GenericPrincipal(new GenericIdentity("zaksilih@gmail.com", "Forms"), null);
+
+            var controller = new CartController(cartService, orderService, customers);
+
             var httpContext = new MockHttpContext();
+            httpContext.User = FakeUser;
             httpContext.Request.Cookies.Add(new System.Web.HttpCookie("eCommerceCart")
             {
                 Value = cart.Id
