@@ -49,9 +49,12 @@ namespace MyShop.WebUI
             container.RegisterType<IRepository<Product>, SQLRepository<Product>>();
             container.RegisterType<IRepository<ProductCategory>, SQLRepository<ProductCategory>>();
             container.RegisterType<IRepository<Cart>, SQLRepository<Cart>>();
-            container.RegisterType<IRepository<CartItem>, SQLRepository<CartItem>>();
-            container.RegisterType<ICartService, CartService>();
+            container.RegisterType<IRepository<CartItem>, SQLRepository<CartItem>>();           
             container.RegisterType<IRepository<Customer>, SQLRepository<Customer>>();
+            container.RegisterType<IRepository<Order>, SQLRepository<Order>>();
+
+            container.RegisterType<ICartService, CartService>();
+            container.RegisterType<IOrderService, OrderService>();
 
         }
     }
